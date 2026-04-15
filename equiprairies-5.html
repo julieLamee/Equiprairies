@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="ÉquiPrairies">
+<title>ÉquiPrairies</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:#f0f4f0;color:#1a2e1a;min-height:100vh;}
+
+.header{background:linear-gradient(135deg,#2d5a27 0%,#4a8f3f 100%);color:white;padding:11px 14px;display:flex;align-items:center;gap:10px;box-shadow:0 2px 8px rgba(0,0,0,0.2);position:sticky;top:0;z-index:50;}
+.htitle{font-size:17px;font-weight:700;}
+.hsub{font-size:10px;opacity:.85;}
+.htabs{margin-left:auto;display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end;}
+.tbtn{background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.3);color:white;padding:5px 11px;border-radius:20px;cursor:pointer;font-size:12px;white-space:nowrap;}
+.tbtn.on{background:rgba(255,255,255,0.28);font-weight:700;}
+
+.content{display:flex;height:calc(100vh - 56px);overflow:hidden;}
+.page{padding:14px;overflow-y:auto;flex:1;display:none;}
+.page.show{display:block;}
+.page h2{color:#1a3a1a;margin-bottom:14px;font-size:17px;}
+.page h3{color:#2d5a27;margin:16px 0 8px;font-size:14px;}
+
+/* CARDS GENERIQUES */
+.card{background:white;border-radius:12px;padding:12px 14px;margin-bottom:10px;box-shadow:0 1px 4px rgba(0,0,0,0.08);}
+.ctitle{font-weight:700;color:#2d5a27;margin-bottom:8px;font-size:13px;}
+.chdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+.btn-add{background:#4a8f3f;color:white;border:none;border-radius:8px;padding:5px 12px;cursor:pointer;font-size:12px;}
+.btn-add.blue{background:#4050a0;}
+.empty{color:#8a9a8a;font-size:12px;text-align:center;padding:14px 0;}
+.badge{border-radius:10px;padding:2px 8px;font-size:10px;font-weight:600;white-space:nowrap;}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.ilbl{font-size:10px;color:#8a9a8a;margin-bottom:2px;}
+.ival{font-weight:600;font-size:13px;}
+.nbox{margin-top:8px;font-size:12px;color:#4a6a4a;background:#f0f7f0;border-radius:8px;padding:7px 10px;}
+
+/* LAYOUT LISTE + DETAIL */
+.split{display:flex;flex:1;overflow:hidden;width:100%;}
+.liste{overflow-y:auto;padding:10px;}
+.liste.full{width:100%;}
+.liste.side{width:260px;min-width:260px;border-right:1px solid #c8dbc8;}
+.filtres{display:flex;gap:6px;margin-bottom:8px;}
+.filtres select,.filtres input{flex:1;padding:5px 7px;border-radius:8px;border:1px solid #b8cdb8;background:white;font-size:12px;}
+.cnt{font-size:11px;color:#5a7a5a;margin-bottom:6px;}
+.item-grid{display:grid;gap:7px;}
+.item-grid.multi{grid-template-columns:repeat(auto-fill,minmax(155px,1fr));}
+.item-grid.single{grid-template-columns:1fr;}
+
+/* PRAIRIE CARDS */
+.pcard{background:white;border-radius:10px;padding:10px 12px;cursor:pointer;border:2px solid transparent;box-shadow:0 1px 4px rgba(0,0,0,0.08);}
+.pcard.sel{border-color:#2d5a27;}
+.pcard-top{display:flex;justify-content:space-between;align-items:flex-start;gap:4px;}
+.pnom{font-weight:700;font-size:13px;}
+.pinfo{font-size:11px;color:#6a8a6a;margin-top:3px;}
+
+/* CHEVAL CARDS */
+.ccard{background:white;border-radius:10px;padding:10px 12px;cursor:pointer;border:2px solid transparent;box-shadow:0 1px 4px rgba(0,0,0,0.08);}
+.ccard.sel{border-color:#4050a0;}
+.ccard-top{display:flex;justify-content:space-between;align-items:flex-start;gap:4px;}
+.ccard-nom{font-weight:700;font-size:13px;}
+.ccard-info{font-size:11px;color:#6a8a6a;margin-top:3px;}
+
+/* DETAIL COMMUN */
+.detail{flex:1;overflow-y:auto;padding:14px;display:none;}
+.detail.show{display:block;}
+.dhdr{display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap;}
+.dnom{font-size:18px;font-weight:700;color:#1a3a1a;}
+.dsub{font-size:12px;color:#5a7a5a;}
+.btn-mod{background:#2d5a27;color:white;border:none;border-radius:8px;padding:6px 12px;cursor:pointer;font-size:12px;margin-left:auto;}
+.btn-mod.blue{background:#4050a0;}
+.btn-back{background:#e8f4e8;color:#2d5a27;border:none;border-radius:8px;padding:6px 10px;cursor:pointer;font-size:12px;display:none;}
+
+/* SÉANCES */
+.seance-item{border:1px solid #dde8ff;border-radius:8px;padding:9px;margin-bottom:7px;}
+.seance-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;}
+.seance-type{font-weight:700;font-size:13px;color:#2d4085;}
+.seance-date{font-size:11px;color:#4a5a8a;}
+.seance-etat{font-size:11px;color:#5a6a9a;margin-bottom:3px;}
+.seance-obs{font-size:12px;color:#3a4a6a;line-height:1.4;}
+.seance-next{font-size:11px;color:#d97706;margin-top:4px;font-weight:600;}
+.stag{background:#f0f7f0;border-radius:5px;padding:2px 7px;font-size:10px;display:inline-block;margin:2px;}
+
+/* DASHBOARD */
+.sgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px;margin-bottom:4px;}
+.scard{background:white;border-radius:10px;padding:12px;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,0.08);}
+.sval{font-size:24px;font-weight:800;color:#2d5a27;}
+.slbl{font-size:11px;color:#6a8a6a;margin-top:2px;}
+.alert-row{background:white;border-radius:10px;padding:10px 13px;margin-bottom:7px;display:flex;align-items:center;gap:10px;box-shadow:0 1px 4px rgba(0,0,0,0.08);}
+.alert-row.urg{border-left:3px solid #dc3545;}
+.alert-row.bin{border-left:3px solid #ffc107;}
+.alert-row.work{border-left:3px solid #6878d8;}
+.alert-nom{font-weight:700;font-size:13px;}
+.alert-sub{font-size:11px;color:#5a7a5a;}
+.alert-date{margin-left:auto;font-weight:700;font-size:12px;text-align:right;}
+.alert-date.urg{color:#dc3545;}
+.alert-date.bin{color:#d97706;}
+.alert-date.work{color:#4050a0;}
+.tbadge{border-radius:6px;padding:2px 7px;font-size:10px;font-weight:600;}
+.tbadge.soin{background:#e8f4e8;color:#2d5a27;}
+.tbadge.work{background:#eef2ff;color:#2d4085;}
+.rrow{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid #e8f0e8;font-size:13px;}
+.rrow:last-child{border-bottom:none;}
+
+/* PLANNING */
+.prow{background:white;border-radius:10px;padding:11px 13px;margin-bottom:7px;display:flex;align-items:center;gap:10px;box-shadow:0 1px 4px rgba(0,0,0,0.08);}
+.prow.ret{border-left:4px solid #dc3545;}
+.prow.ok{border-left:4px solid #2d5a27;}
+.prow.wk{border-left:4px solid #6878d8;}
+
+/* JOURNAL */
+.nform{background:white;border-radius:12px;padding:12px;margin-bottom:12px;box-shadow:0 1px 4px rgba(0,0,0,0.08);}
+.nform textarea{width:100%;padding:8px 10px;border-radius:8px;border:1px solid #c8dbc8;font-size:13px;font-family:inherit;resize:vertical;outline:none;margin-bottom:8px;}
+.nfrow{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+.nfrow select{flex:1;min-width:120px;padding:6px 8px;border-radius:8px;border:1px solid #c8dbc8;font-size:12px;}
+.btn-sn{background:#2d5a27;color:white;border:none;border-radius:8px;padding:7px 16px;cursor:pointer;font-size:13px;font-weight:600;}
+.nitem{background:white;border-radius:10px;padding:11px 13px;margin-bottom:8px;box-shadow:0 1px 4px rgba(0,0,0,0.06);border-left:3px solid #4a8f3f;}
+.nitem.gen{border-left-color:#6a9a8a;}
+.nmeta{font-size:10px;color:#8a9a8a;margin-bottom:4px;display:flex;justify-content:space-between;align-items:center;}
+.ntxt{font-size:13px;line-height:1.5;}
+.ndel{background:none;border:none;color:#c8a8a8;cursor:pointer;font-size:13px;padding:0;}
+.nfilt{display:flex;gap:6px;margin-bottom:10px;}
+.nfilt select{flex:1;padding:5px 8px;border-radius:8px;border:1px solid #b8cdb8;background:white;font-size:12px;}
+
+/* MODALS */
+.ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:200;align-items:center;justify-content:center;padding:14px;}
+.ov.show{display:flex;}
+.modal{background:white;border-radius:14px;padding:18px;width:100%;max-width:390px;box-shadow:0 8px 32px rgba(0,0,0,0.2);max-height:90vh;overflow-y:auto;}
+.modal h3{margin-bottom:12px;color:#1a3a1a;font-size:15px;}
+.fld{margin-bottom:9px;}
+.fld label{display:block;font-size:11px;color:#6a8a6a;margin-bottom:3px;}
+.fld input,.fld select,.fld textarea{width:100%;padding:7px 10px;border-radius:8px;border:1px solid #c8dbc8;font-size:13px;font-family:inherit;outline:none;}
+.fld textarea{resize:vertical;}
+.mbtns{display:flex;gap:8px;justify-content:flex-end;margin-top:12px;}
+.btn-cancel{padding:7px 13px;border-radius:8px;border:1px solid #c8dbc8;background:white;cursor:pointer;font-size:13px;}
+.btn-save{padding:7px 16px;border-radius:8px;border:none;background:#2d5a27;color:white;cursor:pointer;font-weight:700;font-size:13px;}
+.btn-save.blue{background:#4050a0;}
+
+@media(max-width:600px){
+  .liste.side{display:none;}
+  .btn-back{display:inline-block!important;}
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <span style="font-size:22px">🌿</span>
+  <div><div class="htitle">ÉquiPrairies</div><div class="hsub">Gestion équestre</div></div>
+  <div class="htabs">
+    <button class="tbtn on"  onclick="showTab('prairies')">🌾 Prairies</button>
+    <button class="tbtn"     onclick="showTab('chevaux')">🐴 Chevaux</button>
+    <button class="tbtn"     onclick="showTab('dashboard')">📊</button>
+    <button class="tbtn"     onclick="showTab('planning')">📅</button>
+    <button class="tbtn"     onclick="showTab('journal')">📓</button>
+  </div>
+</div>
+
+<div class="content">
+
+  <!-- ===== PRAIRIES ===== -->
+  <div id="vue-prairies" class="split show-split">
+    <div class="liste full" id="p-liste">
+      <div class="filtres">
+        <select id="p-fe" onchange="renderPrairies()"><option value="Tous">Tous états</option><option>En herbe</option><option>Fauchée</option><option>Pâturée</option><option>Au repos</option></select>
+        <select id="p-feq" onchange="renderPrairies()"><option value="Tous">Tous équipistes</option></select>
+      </div>
+      <div class="cnt" id="p-cnt"></div>
+      <div class="item-grid multi" id="p-grid"></div>
+    </div>
+    <div class="detail" id="p-det">
+      <div class="dhdr">
+        <button class="btn-back" id="p-back" onclick="closePDet()">← Retour</button>
+        <div><div class="dnom" id="p-dnom"></div><div class="dsub" id="p-dsub"></div></div>
+        <div class="badge" id="p-dbadge"></div>
+        <button class="btn-mod" onclick="openEditPrairie()">✏️ Modifier</button>
+      </div>
+      <div class="card">
+        <div class="ctitle">📅 Interventions</div>
+        <div class="g2">
+          <div><div class="ilbl">Dernière</div><div class="ival" id="p-dlast"></div></div>
+          <div><div class="ilbl">Prochaine</div><div class="ival" id="p-dnext"></div></div>
+        </div>
+        <div class="nbox" id="p-dnotes" style="display:none"></div>
+      </div>
+      <div class="card">
+        <div class="chdr">
+          <div class="ctitle" style="margin:0">📓 Notes</div>
+          <button class="btn-add" onclick="openPNoteModal()">+ Note</button>
+        </div>
+        <div id="p-notes-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== CHEVAUX ===== -->
+  <div id="vue-chevaux" class="split" style="display:none">
+    <div class="liste full" id="c-liste">
+      <div class="filtres">
+        <input id="c-search" placeholder="🔍 Rechercher un cheval..." oninput="renderChevaux()">
+      </div>
+      <div class="cnt" id="c-cnt"></div>
+      <div style="text-align:right;margin-bottom:8px">
+        <button class="btn-add blue" onclick="openAddCheval()">+ Nouveau cheval</button>
+      </div>
+      <div class="item-grid multi" id="c-grid"></div>
+    </div>
+    <div class="detail" id="c-det">
+      <div class="dhdr">
+        <button class="btn-back" id="c-back" onclick="closeCDet()">← Retour</button>
+        <div><div class="dnom" id="c-dnom"></div><div class="dsub" id="c-dsub"></div></div>
+        <button class="btn-mod blue" onclick="openEditCheval()">✏️ Modifier</button>
+      </div>
+      <!-- Séances -->
+      <div class="card">
+        <div class="chdr">
+          <div class="ctitle" style="margin:0">🏇 Séances de travail</div>
+          <button class="btn-add blue" onclick="openAddSeance()">+ Séance</button>
+        </div>
+        <div id="c-next-seance"></div>
+        <div id="c-seances-list"></div>
+      </div>
+      <!-- Soins -->
+      <div class="card">
+        <div class="chdr">
+          <div class="ctitle" style="margin:0">💊 Soins</div>
+          <button class="btn-add" onclick="openAddSoin()">+ Soin</button>
+        </div>
+        <div id="c-soins-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== DASHBOARD ===== -->
+  <div id="vue-dashboard" class="page">
+    <h2>📊 Tableau de bord</h2>
+    <div class="sgrid" id="d-stats"></div>
+    <h3>🏇 Prochaines séances de travail</h3>
+    <div id="d-work"></div>
+    <h3>💊 Soins à venir (30 jours)</h3>
+    <div id="d-soins"></div>
+    <h3>📋 Résumé des soins</h3>
+    <div class="card" id="d-resume"></div>
+  </div>
+
+  <!-- ===== PLANNING ===== -->
+  <div id="vue-planning" class="page">
+    <h2>📅 Planning</h2>
+    <h3>🌾 Interventions prairies</h3>
+    <div id="pl-prairies"></div>
+    <h3>🏇 Prochaines séances par cheval</h3>
+    <div id="pl-work"></div>
+    <h3>👥 Charge par équipiste</h3>
+    <div class="sgrid" id="pl-eq"></div>
+  </div>
+
+  <!-- ===== JOURNAL ===== -->
+  <div id="vue-journal" class="page">
+    <h2>📓 Carnet de bord</h2>
+    <div class="nform">
+      <textarea id="n-txt" rows="3" placeholder="Entretien, idée, observation..."></textarea>
+      <div class="nfrow">
+        <select id="n-cat">
+          <option value="general">📋 Note générale</option>
+          <option value="prairie">🌾 Prairie...</option>
+          <option value="cheval">🐴 Cheval...</option>
+        </select>
+        <select id="n-ref" style="display:none"></select>
+        <button class="btn-sn" onclick="saveNote()">Ajouter</button>
+      </div>
+    </div>
+    <div class="nfilt">
+      <select id="n-filt" onchange="renderJournal()">
+        <option value="Tous">Toutes les notes</option>
+        <option value="general">Notes générales</option>
+        <option value="prairie">Notes prairies</option>
+        <option value="cheval">Notes chevaux</option>
+      </select>
+    </div>
+    <div id="n-list"></div>
+  </div>
+
+</div>
+
+<!-- MODAL EDIT PRAIRIE -->
+<div class="ov" id="m-ep"><div class="modal"><h3>✏️ Modifier la prairie</h3>
+  <div class="fld"><label>Nom</label><input id="ep-nom"></div>
+  <div class="fld"><label>Superficie</label><input id="ep-sup" placeholder="Ex: 3 ha"></div>
+  <div class="fld"><label>État</label><select id="ep-etat"><option>En herbe</option><option>Fauchée</option><option>Pâturée</option><option>Au repos</option></select></div>
+  <div class="fld"><label>Équipiste</label><input id="ep-eq" placeholder="Nom équipiste"></div>
+  <div class="fld"><label>Dernière intervention</label><input id="ep-last" type="date"></div>
+  <div class="fld"><label>Prochaine intervention</label><input id="ep-next" type="date"></div>
+  <div class="fld"><label>Notes</label><textarea id="ep-notes" rows="2"></textarea></div>
+  <div class="mbtns"><button class="btn-cancel" onclick="closeM('m-ep')">Annuler</button><button class="btn-save" onclick="savePrairie()">Enregistrer</button></div>
+</div></div>
+
+<!-- MODAL NOTE PRAIRIE -->
+<div class="ov" id="m-pn"><div class="modal"><h3>📓 Note pour cette prairie</h3>
+  <div class="fld"><label>Note</label><textarea id="pn-txt" rows="4" placeholder="Observation, idée..."></textarea></div>
+  <div class="mbtns"><button class="btn-cancel" onclick="closeM('m-pn')">Annuler</button><button class="btn-save" onclick="savePNote()">Ajouter</button></div>
+</div></div>
+
+<!-- MODAL ADD/EDIT CHEVAL -->
+<div class="ov" id="m-ec"><div class="modal"><h3 id="ec-title">🐴 Nouveau cheval</h3>
+  <div class="fld"><label>Nom *</label><input id="ec-nom" placeholder="Nom du cheval"></div>
+  <div class="fld"><label>Race</label><input id="ec-race" placeholder="Ex: Selle Français"></div>
+  <div class="fld"><label>Couleur / Robe</label><input id="ec-col" placeholder="Ex: Alezan"></div>
+  <div class="fld"><label>Date de naissance</label><input id="ec-dob" type="date"></div>
+  <div class="fld"><label>Notes</label><textarea id="ec-notes" rows="2" placeholder="Caractère, particularités..."></textarea></div>
+  <div class="mbtns"><button class="btn-cancel" onclick="closeM('m-ec')">Annuler</button><button class="btn-save blue" onclick="saveCheval()">Enregistrer</button></div>
+</div></div>
+
+<!-- MODAL SÉANCE DE TRAVAIL -->
+<div class="ov" id="m-ws"><div class="modal"><h3>🏇 Séance de travail</h3>
+  <div class="fld"><label>Date *</label><input id="ws-date" type="date"></div>
+  <div class="fld"><label>Durée (minutes)</label><input id="ws-dur" type="number" placeholder="Ex: 45" min="1"></div>
+  <div class="fld"><label>Type de travail</label>
+    <select id="ws-type"><option>Longe</option><option>Monte</option><option>Obstacle</option><option>Dressage</option><option>Balade</option><option>Débourrage</option><option>Liberté</option><option>Autre</option></select>
+  </div>
+  <div class="fld"><label>État du cheval</label>
+    <select id="ws-etat"><option value="">— Non renseigné —</option><option>Très en forme</option><option>En forme</option><option>Correct</option><option>Fatigué</option><option>Tendu</option><option>Indisponible</option></select>
+  </div>
+  <div class="fld"><label>Observations</label><textarea id="ws-obs" rows="3" placeholder="Comportement, progrès, points à retravailler..."></textarea></div>
+  <div class="fld"><label>Prochaine séance prévue</label><input id="ws-next" type="date"></div>
+  <div class="mbtns"><button class="btn-cancel" onclick="closeM('m-ws')">Annuler</button><button class="btn-save blue" onclick="saveSeance()">Enregistrer</button></div>
+</div></div>
+
+<!-- MODAL SOIN -->
+<div class="ov" id="m-so"><div class="modal"><h3>💊 Ajouter un soin</h3>
+  <div class="fld"><label>Type</label><select id="so-type"><option>Maréchal</option><option>Vermifuge</option><option>Vaccin</option><option>Vétérinaire</option><option>Autre</option></select></div>
+  <div class="fld"><label>Date *</label><input id="so-date" type="date"></div>
+  <div class="fld"><label>Prochain soin prévu</label><input id="so-next" type="date"></div>
+  <div class="fld"><label>Notes</label><input id="so-notes" placeholder="Optionnel"></div>
+  <div class="mbtns"><button class="btn-cancel" onclick="closeM('m-so')">Annuler</button><button class="btn-save" onclick="saveSoin()">Enregistrer</button></div>
+</div></div>
+
+<script>
+const EC={"En herbe":{bg:"#d4edda",text:"#155724"},"Fauchée":{bg:"#fff3cd",text:"#856404"},"Pâturée":{bg:"#cce5ff",text:"#004085"},"Au repos":{bg:"#f8d7da",text:"#721c24"}};
+let prairies=[],chevaux=[],notes=[],selPId=null,selCId=null;
+
+function initData(){
+  const sp=localStorage.getItem("eqp_p6"),sc=localStorage.getItem("eqp_c1"),sn=localStorage.getItem("eqp_n4");
+  prairies=sp?JSON.parse(sp):Array.from({length:16},(_,i)=>({id:i+1,nom:`Prairie ${i+1}`,superficie:"",etat:["En herbe","Fauchée","Pâturée","Au repos"][i%4],equipiste:"",derniereIntervention:null,prochaineIntervention:null,notes:""}));
+  chevaux=sc?JSON.parse(sc):[];
+  notes=sn?JSON.parse(sn):[];
+  if(!sp)saveP();
+}
+function saveP(){localStorage.setItem("eqp_p6",JSON.stringify(prairies));}
+function saveC(){localStorage.setItem("eqp_c1",JSON.stringify(chevaux));}
+function saveN(){localStorage.setItem("eqp_n4",JSON.stringify(notes));}
+function fmt(d){return d?new Date(d+"T00:00:00").toLocaleDateString("fr-FR"):"—";}
+function fmtTs(ts){return new Date(ts).toLocaleDateString("fr-FR",{day:"2-digit",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit"});}
+
+// ===== NAVIGATION =====
+function showTab(t){
+  const tabs=["prairies","chevaux","dashboard","planning","journal"];
+  tabs.forEach((x,i)=>{
+    document.querySelectorAll(".tbtn")[i].classList.toggle("on",x===t);
+    const el=document.getElementById("vue-"+x);
+    const isSplit=x==="prairies"||x==="chevaux";
+    el.style.display=t===x?(isSplit?"flex":"block"):"none";
+  });
+  if(t==="dashboard")renderDash();
+  if(t==="planning")renderPlanning();
+  if(t==="journal")renderJournal();
+  if(t==="chevaux")renderChevaux();
+  if(t==="prairies")renderPrairies();
+}
+
+// ===== PRAIRIES =====
+function renderPrairies(){
+  const eqs=[...new Set(prairies.map(p=>p.equipiste).filter(Boolean))];
+  const feq=document.getElementById("p-feq"),cv=feq.value;
+  feq.innerHTML='<option value="Tous">Tous équipistes</option>'+eqs.map(e=>`<option ${e===cv?'selected':''}>${e}</option>`).join("");
+  if(cv&&cv!=="Tous")feq.value=cv;
+  const etat=document.getElementById("p-fe").value,eq=document.getElementById("p-feq").value;
+  const f=prairies.filter(p=>(etat==="Tous"||p.etat===etat)&&(eq==="Tous"||p.equipiste===eq));
+  const isSide=selPId!==null;
+  document.getElementById("p-liste").className="liste "+(isSide?"side":"full");
+  const g=document.getElementById("p-grid");g.className="item-grid "+(isSide?"single":"multi");
+  document.getElementById("p-cnt").textContent=f.length+" prairie(s)";
+  g.innerHTML=f.map(p=>{const ec=EC[p.etat]||EC["En herbe"];return`<div class="pcard ${p.id===selPId?'sel':''}" onclick="selPrairie(${p.id})">
+    <div class="pcard-top"><span class="pnom">${p.nom}</span><span class="badge" style="background:${ec.bg};color:${ec.text}">${p.etat}</span></div>
+    <div class="pinfo">👤 ${p.equipiste||'—'}</div>
+    <div class="pinfo" style="font-size:10px;margin-top:2px">${p.superficie||''}${p.derniereIntervention?' · '+fmt(p.derniereIntervention):''}</div>
+  </div>`;}).join("");
+}
+
+function selPrairie(id){
+  if(selPId===id){closePDet();return;}
+  selPId=id;renderPrairies();renderPDet();
+  document.getElementById("p-det").classList.add("show");
+  if(window.innerWidth<=600){document.getElementById("p-liste").style.display="none";document.getElementById("p-back").style.display="inline-block";}
+}
+function closePDet(){selPId=null;document.getElementById("p-det").classList.remove("show");document.getElementById("p-liste").style.display="";renderPrairies();}
+
+function renderPDet(){
+  const p=prairies.find(x=>x.id===selPId);if(!p)return;
+  const ec=EC[p.etat]||EC["En herbe"];
+  document.getElementById("p-dnom").textContent=p.nom;
+  document.getElementById("p-dsub").textContent=(p.superficie||'')+(p.superficie&&p.equipiste?' · ':'')+(p.equipiste?'👤 '+p.equipiste:'');
+  const b=document.getElementById("p-dbadge");b.textContent=p.etat;b.style.background=ec.bg;b.style.color=ec.text;
+  document.getElementById("p-dlast").textContent=fmt(p.derniereIntervention);
+  const ne=document.getElementById("p-dnext");ne.textContent=fmt(p.prochaineIntervention);ne.style.color=p.prochaineIntervention?"#d97706":"#6a8a6a";
+  const pn=document.getElementById("p-dnotes");if(p.notes){pn.textContent="📝 "+p.notes;pn.style.display="block";}else pn.style.display="none";
+  const pnotes=notes.filter(n=>n.cat==="prairie"&&n.ref==p.id).sort((a,b)=>b.ts-a.ts);
+  document.getElementById("p-notes-list").innerHTML=pnotes.length===0?`<div class="empty">Aucune note</div>`:pnotes.map(n=>`<div class="nitem" style="margin-bottom:6px"><div class="nmeta"><span>${fmtTs(n.ts)}</span><button class="ndel" onclick="delNote(${n.ts})">🗑</button></div><div class="ntxt">${n.txt}</div></div>`).join("");
+}
+
+function openEditPrairie(){
+  const p=prairies.find(x=>x.id===selPId);if(!p)return;
+  document.getElementById("ep-nom").value=p.nom;document.getElementById("ep-sup").value=p.superficie||"";
+  document.getElementById("ep-etat").value=p.etat;document.getElementById("ep-eq").value=p.equipiste||"";
+  document.getElementById("ep-last").value=p.derniereIntervention||"";document.getElementById("ep-next").value=p.prochaineIntervention||"";
+  document.getElementById("ep-notes").value=p.notes||"";
+  document.getElementById("m-ep").classList.add("show");
+}
+function savePrairie(){
+  const p=prairies.find(x=>x.id===selPId);if(!p)return;
+  p.nom=document.getElementById("ep-nom").value;p.superficie=document.getElementById("ep-sup").value;
+  p.etat=document.getElementById("ep-etat").value;p.equipiste=document.getElementById("ep-eq").value;
+  p.derniereIntervention=document.getElementById("ep-last").value||null;p.prochaineIntervention=document.getElementById("ep-next").value||null;
+  p.notes=document.getElementById("ep-notes").value;
+  saveP();closeM("m-ep");renderPrairies();renderPDet();
+}
+function openPNoteModal(){document.getElementById("pn-txt").value="";document.getElementById("m-pn").classList.add("show");}
+function savePNote(){
+  const txt=document.getElementById("pn-txt").value.trim();if(!txt)return;
+  notes.unshift({ts:Date.now(),txt,cat:"prairie",ref:selPId});saveN();closeM("m-pn");renderPDet();
+}
+
+// ===== CHEVAUX =====
+function renderChevaux(){
+  const q=document.getElementById("c-search").value.toLowerCase();
+  const f=chevaux.filter(c=>!q||c.nom.toLowerCase().includes(q)||c.race.toLowerCase().includes(q));
+  const isSide=selCId!==null;
+  document.getElementById("c-liste").className="liste "+(isSide?"side":"full");
+  const g=document.getElementById("c-grid");g.className="item-grid "+(isSide?"single":"multi");
+  document.getElementById("c-cnt").textContent=f.length+" cheval(aux)";
+  g.innerHTML=f.map(c=>{
+    const lastS=c.seances&&c.seances.length?c.seances[c.seances.length-1]:null;
+    return`<div class="ccard ${c.id===selCId?'sel':''}" onclick="selCheval(${c.id})">
+      <div class="ccard-top"><span class="ccard-nom">🐎 ${c.nom}</span></div>
+      <div class="ccard-info">${c.race||''}${c.race&&c.couleur?' · ':''}${c.couleur||''}</div>
+      <div class="ccard-info" style="font-size:10px;margin-top:2px">🏇 ${c.seances?c.seances.length:0} séance(s) · 💊 ${c.soins?c.soins.length:0} soin(s)</div>
+      ${lastS&&lastS.nextDate?`<div style="font-size:10px;color:#d97706;margin-top:2px">📅 Prochain: ${fmt(lastS.nextDate)}</div>`:''}
+    </div>`;
+  }).join("")||`<div class="empty">Aucun cheval enregistré.<br>Cliquez sur "+ Nouveau cheval"</div>`;
+}
+
+function selCheval(id){
+  if(selCId===id){closeCDet();return;}
+  selCId=id;renderChevaux();renderCDet();
+  document.getElementById("c-det").classList.add("show");
+  if(window.innerWidth<=600){document.getElementById("c-liste").style.display="none";document.getElementById("c-back").style.display="inline-block";}
+}
+function closeCDet(){selCId=null;document.getElementById("c-det").classList.remove("show");document.getElementById("c-liste").style.display="";renderChevaux();}
+
+function renderCDet(){
+  const c=chevaux.find(x=>x.id===selCId);if(!c)return;
+  document.getElementById("c-dnom").textContent="🐎 "+c.nom;
+  let sub=[c.race,c.couleur].filter(Boolean).join(" · ");
+  if(c.dob)sub+=(sub?" · ":"")+"Né(e) le "+fmt(c.dob);
+  document.getElementById("c-dsub").textContent=sub||"";
+
+  // Prochaine séance
+  const ns=document.getElementById("c-next-seance");
+  const last=c.seances&&c.seances.length?c.seances[c.seances.length-1]:null;
+  if(last&&last.nextDate){
+    const today=new Date();today.setHours(0,0,0,0);
+    const nd=new Date(last.nextDate+"T00:00:00");
+    const retard=nd<today;
+    ns.innerHTML=`<div style="background:${retard?'#fff0f0':'#fff8e8'};border-radius:8px;padding:8px 12px;margin-bottom:10px;font-size:12px;color:${retard?'#9a2424':'#856404'};font-weight:600;">📅 Prochaine séance : ${fmt(last.nextDate)}${retard?' ⚠️ En retard':''}</div>`;
+  } else ns.innerHTML="";
+
+  // Séances
+  const seances=c.seances||[];
+  document.getElementById("c-seances-list").innerHTML=seances.length===0?`<div class="empty">Aucune séance enregistrée</div>`:
+    [...seances].reverse().map(s=>`<div class="seance-item">
+      <div class="seance-hdr"><span class="seance-type">🏇 ${s.type}</span><span class="seance-date">${fmt(s.date)}${s.dur?' · '+s.dur+' min':''}</span></div>
+      ${s.etat?`<div class="seance-etat">État : ${s.etat}</div>`:''}
+      ${s.obs?`<div class="seance-obs">${s.obs}</div>`:''}
+      ${s.nextDate?`<div class="seance-next">→ Prochain : ${fmt(s.nextDate)}</div>`:''}
+    </div>`).join("");
+
+  // Soins
+  const soins=c.soins||[];
+  document.getElementById("c-soins-list").innerHTML=soins.length===0?`<div class="empty">Aucun soin enregistré</div>`:
+    [...soins].reverse().map(s=>`<span class="stag"><b>${s.type}</b> ${fmt(s.date)}${s.nextDate?' → '+fmt(s.nextDate):''}${s.notes?' — '+s.notes:''}</span>`).join("");
+}
+
+function openAddCheval(){
+  document.getElementById("ec-title").textContent="🐴 Nouveau cheval";
+  ["ec-nom","ec-race","ec-col","ec-dob","ec-notes"].forEach(id=>document.getElementById(id).value="");
+  document.getElementById("m-ec").classList.add("show");
+}
+function openEditCheval(){
+  const c=chevaux.find(x=>x.id===selCId);if(!c)return;
+  document.getElementById("ec-title").textContent="✏️ Modifier "+c.nom;
+  document.getElementById("ec-nom").value=c.nom;document.getElementById("ec-race").value=c.race||"";
+  document.getElementById("ec-col").value=c.couleur||"";document.getElementById("ec-dob").value=c.dob||"";
+  document.getElementById("ec-notes").value=c.notes||"";
+  document.getElementById("m-ec").classList.add("show");
+}
+function saveCheval(){
+  const nom=document.getElementById("ec-nom").value.trim();if(!nom)return;
+  if(selCId&&document.getElementById("ec-title").textContent.startsWith("✏️")){
+    const c=chevaux.find(x=>x.id===selCId);
+    c.nom=nom;c.race=document.getElementById("ec-race").value;c.couleur=document.getElementById("ec-col").value;
+    c.dob=document.getElementById("ec-dob").value||null;c.notes=document.getElementById("ec-notes").value;
+    saveC();closeM("m-ec");renderChevaux();renderCDet();
+  } else {
+    chevaux.push({id:Date.now(),nom,race:document.getElementById("ec-race").value,couleur:document.getElementById("ec-col").value,dob:document.getElementById("ec-dob").value||null,notes:document.getElementById("ec-notes").value,seances:[],soins:[]});
+    saveC();closeM("m-ec");renderChevaux();
+  }
+}
+
+function openAddSeance(){
+  document.getElementById("ws-date").value=new Date().toISOString().split("T")[0];
+  ["ws-dur","ws-obs","ws-next"].forEach(id=>document.getElementById(id).value="");
+  document.getElementById("ws-type").value="Longe";document.getElementById("ws-etat").value="";
+  document.getElementById("m-ws").classList.add("show");
+}
+function saveSeance(){
+  const date=document.getElementById("ws-date").value;if(!date)return;
+  const c=chevaux.find(x=>x.id===selCId);if(!c)return;
+  if(!c.seances)c.seances=[];
+  c.seances.push({id:Date.now(),date,dur:document.getElementById("ws-dur").value,type:document.getElementById("ws-type").value,etat:document.getElementById("ws-etat").value,obs:document.getElementById("ws-obs").value,nextDate:document.getElementById("ws-next").value||null});
+  saveC();closeM("m-ws");renderCDet();renderChevaux();
+}
+
+function openAddSoin(){
+  document.getElementById("so-date").value=new Date().toISOString().split("T")[0];
+  document.getElementById("so-next").value="";document.getElementById("so-notes").value="";
+  document.getElementById("m-so").classList.add("show");
+}
+function saveSoin(){
+  const date=document.getElementById("so-date").value;if(!date)return;
+  const c=chevaux.find(x=>x.id===selCId);if(!c)return;
+  if(!c.soins)c.soins=[];
+  c.soins.push({id:Date.now(),type:document.getElementById("so-type").value,date,nextDate:document.getElementById("so-next").value||null,notes:document.getElementById("so-notes").value});
+  saveC();closeM("m-so");renderCDet();renderChevaux();
+}
+
+// ===== DASHBOARD =====
+function renderDash(){
+  const tc=chevaux.length;
+  const ts=chevaux.reduce((a,c)=>a+(c.soins?c.soins.length:0),0);
+  const tw=chevaux.reduce((a,c)=>a+(c.seances?c.seances.length:0),0);
+  document.getElementById("d-stats").innerHTML=`
+    <div class="scard"><div class="sval">16</div><div class="slbl">Prairies</div></div>
+    <div class="scard"><div class="sval">${tc}</div><div class="slbl">Chevaux</div></div>
+    <div class="scard"><div class="sval">${tw}</div><div class="slbl">Séances travail</div></div>
+    <div class="scard"><div class="sval">${ts}</div><div class="slbl">Soins</div></div>
+    <div class="scard"><div class="sval">${notes.length}</div><div class="slbl">Notes carnet</div></div>`;
+  const today=new Date();today.setHours(0,0,0,0);
+  const workAv=[];
+  chevaux.forEach(c=>{if(c.seances&&c.seances.length){const l=c.seances[c.seances.length-1];if(l.nextDate)workAv.push({nom:c.nom,date:new Date(l.nextDate+"T00:00:00"),ds:l.nextDate,type:l.type});} });
+  workAv.sort((a,b)=>a.date-b.date);
+  document.getElementById("d-work").innerHTML=workAv.length===0?`<div class="card"><div class="empty">Aucune séance planifiée</div></div>`:workAv.slice(0,8).map(w=>{
+    const r=w.date<today,b=!r&&w.date<=new Date(today.getTime()+7*86400000);
+    return`<div class="alert-row ${r?'urg':b?'bin':'work'}"><div style="flex:1"><div class="alert-nom">🐎 ${w.nom}</div></div><span class="tbadge work">${w.type}</span><div class="alert-date ${r?'urg':b?'bin':'work'}">${fmt(w.ds)}${r?'<br><span style="font-size:9px">En retard</span>':''}</div></div>`;
+  }).join("");
+  const in30=new Date(today);in30.setDate(in30.getDate()+30);
+  const soinsAv=[];
+  chevaux.forEach(c=>{if(c.soins)c.soins.forEach(s=>{if(s.nextDate){const d=new Date(s.nextDate+"T00:00:00");if(d<=in30)soinsAv.push({nom:c.nom,type:s.type,date:d,ds:s.nextDate});}});});
+  soinsAv.sort((a,b)=>a.date-b.date);
+  document.getElementById("d-soins").innerHTML=soinsAv.length===0?`<div class="card"><div class="empty">Aucun soin prévu dans les 30 jours</div></div>`:soinsAv.map(s=>{
+    const r=s.date<today,b=!r&&s.date<=new Date(today.getTime()+7*86400000);
+    return`<div class="alert-row ${r?'urg':b?'bin':''}"><div style="flex:1"><div class="alert-nom">🐎 ${s.nom}</div></div><span class="tbadge soin">${s.type}</span><div class="alert-date ${r?'urg':b?'bin':''}">${fmt(s.ds)}${r?'<br><span style="font-size:9px">En retard</span>':''}</div></div>`;
+  }).join("");
+  const cs={};chevaux.forEach(c=>{if(c.soins)c.soins.forEach(s=>{cs[s.type]=(cs[s.type]||0)+1;});});
+  document.getElementById("d-resume").innerHTML=Object.keys(cs).length===0?`<div class="empty">Aucun soin enregistré</div>`:Object.entries(cs).sort((a,b)=>b[1]-a[1]).map(([t,n])=>`<div class="rrow"><span>${t}</span><span style="font-weight:700;color:#2d5a27">${n} soin(s)</span></div>`).join("");
+}
+
+// ===== PLANNING =====
+function renderPlanning(){
+  const today=new Date();today.setHours(0,0,0,0);
+  const pr=prairies.filter(p=>p.prochaineIntervention).sort((a,b)=>new Date(a.prochaineIntervention)-new Date(b.prochaineIntervention));
+  document.getElementById("pl-prairies").innerHTML=pr.length===0?`<div class="card"><div class="empty">Aucune intervention planifiée</div></div>`:pr.map(p=>{
+    const r=new Date(p.prochaineIntervention)<today;const ec=EC[p.etat]||EC["En herbe"];
+    return`<div class="prow ${r?'ret':'ok'}"><div style="flex:1"><b>${p.nom}</b><div style="font-size:11px;color:#5a7a5a">👤 ${p.equipiste||'—'}</div></div><span class="badge" style="background:${ec.bg};color:${ec.text}">${p.etat}</span><div style="text-align:right;font-weight:700;font-size:13px;color:${r?'#dc3545':'#2d5a27'}">${fmt(p.prochaineIntervention)}${r?'<div style="font-size:10px;color:#dc3545">En retard</div>':''}</div></div>`;
+  }).join("");
+  const wr=[];
+  chevaux.forEach(c=>{if(c.seances&&c.seances.length){const l=c.seances[c.seances.length-1];if(l.nextDate)wr.push({nom:c.nom,date:new Date(l.nextDate+"T00:00:00"),ds:l.nextDate,type:l.type||'Travail'});}});
+  wr.sort((a,b)=>a.date-b.date);
+  document.getElementById("pl-work").innerHTML=wr.length===0?`<div class="card"><div class="empty">Aucune séance planifiée</div></div>`:wr.map(w=>{
+    const r=w.date<today;
+    return`<div class="prow ${r?'ret':'wk'}"><div style="flex:1"><b>🐎 ${w.nom}</b></div><span class="tbadge work">${w.type}</span><div style="text-align:right;font-weight:700;font-size:13px;color:${r?'#dc3545':'#4050a0'}">${fmt(w.ds)}${r?'<div style="font-size:10px;color:#dc3545">En retard</div>':''}</div></div>`;
+  }).join("");
+  const eqs=[...new Set(prairies.map(p=>p.equipiste).filter(Boolean))];
+  document.getElementById("pl-eq").innerHTML=eqs.length===0?`<div class="empty">Aucun équipiste défini</div>`:eqs.map(e=>{
+    const ps=prairies.filter(p=>p.equipiste===e);
+    return`<div class="scard"><div style="font-weight:700;color:#2d5a27;font-size:13px">${e}</div><div class="sval" style="font-size:22px">${ps.length}</div><div class="slbl">prairie(s)</div></div>`;
+  }).join("");
+}
+
+// ===== JOURNAL =====
+document.getElementById("n-cat").onchange=function(){
+  const ref=document.getElementById("n-ref");
+  if(this.value==="prairie"){ref.style.display="";ref.innerHTML=prairies.map(p=>`<option value="${p.id}">${p.nom}</option>`).join("");}
+  else if(this.value==="cheval"){ref.style.display="";ref.innerHTML=chevaux.map(c=>`<option value="${c.id}">${c.nom}</option>`).join("")||`<option>Aucun cheval</option>`;}
+  else ref.style.display="none";
+};
+function saveNote(){
+  const txt=document.getElementById("n-txt").value.trim();if(!txt)return;
+  const cat=document.getElementById("n-cat").value;
+  const ref=cat!=="general"?document.getElementById("n-ref").value:null;
+  notes.unshift({ts:Date.now(),txt,cat,ref:ref?parseInt(ref):null});
+  saveN();document.getElementById("n-txt").value="";renderJournal();
+}
+function delNote(ts){
+  if(!confirm("Supprimer ?"))return;
+  notes=notes.filter(n=>n.ts!==ts);saveN();renderJournal();
+  if(selPId)renderPDet();
+}
+function renderJournal(){
+  const fv=document.getElementById("n-filt").value;
+  let f=notes;
+  if(fv!=="Tous")f=notes.filter(n=>n.cat===fv);
+  f=[...f].sort((a,b)=>b.ts-a.ts);
+  document.getElementById("n-list").innerHTML=f.length===0?`<div class="card"><div class="empty">Aucune note</div></div>`:f.map(n=>{
+    let label="📋 Général";
+    if(n.cat==="prairie"){const p=prairies.find(x=>x.id===n.ref);label=p?`🌾 ${p.nom}`:"🌾 Prairie";}
+    if(n.cat==="cheval"){const c=chevaux.find(x=>x.id===n.ref);label=c?`🐎 ${c.nom}`:"🐎 Cheval";}
+    return`<div class="nitem ${n.cat==='general'?'gen':''}"><div class="nmeta"><span><b style="color:#2d5a27">${label}</b> · ${fmtTs(n.ts)}</span><button class="ndel" onclick="delNote(${n.ts})">🗑</button></div><div class="ntxt">${n.txt}</div></div>`;
+  }).join("");
+}
+
+function closeM(id){document.getElementById(id).classList.remove("show");}
+document.querySelectorAll(".ov").forEach(o=>o.addEventListener("click",e=>{if(e.target===o)o.classList.remove("show");}));
+
+initData();renderPrairies();
+</script>
+</body>
+</html>
